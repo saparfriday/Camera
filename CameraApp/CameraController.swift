@@ -51,7 +51,6 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
     }
     
     @objc private func captureButtonDidTapped() {
-        captureButton.isEnabled = false
         let settings = AVCapturePhotoSettings()
         self.photoFileOutput.capturePhoto(with: settings, delegate: self)
     }
@@ -82,6 +81,7 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
     @objc private func handleLongPress(gestureRecognizer: UILongPressGestureRecognizer) {
 
         if gestureRecognizer.state == UIGestureRecognizer.State.began {
+            captureButton.setImage(UIImage(named: "captureVideo"), for: .normal)
             
             captureSession.removeOutput(photoFileOutput)
             captureSession.addOutput(movieFileOutput)
@@ -100,6 +100,7 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
             movieFileOutput.startRecording(to: filePath, recordingDelegate: self)
             
         } else if gestureRecognizer.state == UIGestureRecognizer.State.ended {
+            captureButton.setImage(UIImage(named: "capturePhoto"), for: .normal)
             captureSession.removeOutput(movieFileOutput)
             captureSession.addOutput(photoFileOutput)
             movieFileOutput.stopRecording()
