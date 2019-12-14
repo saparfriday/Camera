@@ -58,19 +58,23 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
     @objc private func handleSwitchCamera() {
         captureSession.beginConfiguration()
         
+        // Create new video device input. If current front = create back etc.
         let currentInput = captureSession.inputs.first as? AVCaptureDeviceInput
         let newCameraDevice = currentInput?.device.position == .back ? getDevice(position: .front) : getDevice(position: .back)
         let newVideoInput = try? AVCaptureDeviceInput(device: newCameraDevice!)
         
+        // Create new audio device input
         let captureAudio = AVCaptureDevice.default(for: AVMediaType.audio)
         let inputAudio = try? AVCaptureDeviceInput(device: captureAudio!)
         
+        // Remove all current inputs
         if let inputs = captureSession.inputs as? [AVCaptureDeviceInput] {
             for input in inputs {
                 captureSession.removeInput(input)
             }
         }
         
+        // Add new created inputs
         if captureSession.inputs.isEmpty {
             captureSession.addInput(newVideoInput!)
             captureSession.addInput(inputAudio!)
@@ -79,13 +83,14 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
     }
     
     @objc private func handleLongPress(gestureRecognizer: UILongPressGestureRecognizer) {
-
+        
         if gestureRecognizer.state == UIGestureRecognizer.State.began {
+            // Long progress start
             captureButton.setImage(UIImage(named: "captureVideo"), for: .normal)
-            
+            // Switch photo to video
             captureSession.removeOutput(photoFileOutput)
             captureSession.addOutput(movieFileOutput)
-            
+            // Create video file
             let documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0] as URL
             let filePath = documentsURL.appendingPathComponent("tempMovie.mp4")
             if FileManager.default.fileExists(atPath: filePath.absoluteString) {
@@ -98,8 +103,8 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
                 }
             }
             movieFileOutput.startRecording(to: filePath, recordingDelegate: self)
-            
         } else if gestureRecognizer.state == UIGestureRecognizer.State.ended {
+            // Long press end. Switch video to photo
             captureButton.setImage(UIImage(named: "capturePhoto"), for: .normal)
             captureSession.removeOutput(movieFileOutput)
             captureSession.addOutput(photoFileOutput)
@@ -162,6 +167,7 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
         
     }
 
+    // Did finish photo capture
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let previewImage = UIImage(data: photo.fileDataRepresentation()!){
             let showMediaController = ShowMediaController()
@@ -170,6 +176,7 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, AVCaptu
         }
     }
     
+    // Did finish video recording
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
         let showMediaController = ShowMediaController()
         showMediaController.url = outputFileURL
